@@ -18,24 +18,24 @@ pipeline {
     }
 
     stages {
-        stage('NetworkInit'){
+        stage('ENVInit'){
             steps {
-                dir('m8/networking/'){
+                dir('env/'){
                     sh 'terraform --version'
                     sh "terraform init"
                 }
             }
         }
-        stage('NetworkValidate'){
+        stage('ENVValidate'){
             steps {
-                dir('Terraform-Advance-3/lab/Jenkins/networking'){
+                dir('env'){
                     sh 'terraform validate'
                 }
             }
         }
-        stage('NetworkPlan'){
+        stage('ENVPlan'){
             steps {
-                dir('m8/networking/'){
+                dir('env'){
                     script {
                         try {
                            sh "terraform workspace new ${params.WORKSPACE}"
@@ -48,7 +48,7 @@ pipeline {
                 }
             }
         }
-        stage('NetworkApply'){
+        stage('ENVApply'){
             steps {
                 script{
                     def apply = false
@@ -57,13 +57,13 @@ pipeline {
                         apply = true
                     } catch (err) {
                         apply = false
-                        dir('Terraform-Advance-3/lab/Jenkins/networking'){
+                        dir('env'){
                             sh "terraform destroy -auto-approve"
                         }
                         currentBuild.result = 'UNSTABLE'
                     }
                     if(apply){
-                        dir('Terraform-Advance-3/lab/Jenkins/networking'){
+                        dir('env'){
                             unstash "terraform-networking-plan"
                             sh 'terraform apply terraform-networking.tfplan'
                         }

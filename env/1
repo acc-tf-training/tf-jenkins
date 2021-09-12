@@ -18,37 +18,37 @@ pipeline {
     }
 
     stages {
-        stage('ApplicationInit'){
+        stage('ENVInit'){
             steps {
-                dir('m8/applications/'){
+                dir('env/'){
                     sh 'terraform --version'
-                    sh "terraform init" 
+                    sh "terraform init"
                 }
             }
         }
-        stage('ApplicationValidate'){
+        stage('ENVValidate'){
             steps {
-                dir('applications/'){
+                dir('env'){
                     sh 'terraform validate'
                 }
             }
         }
-        stage('ApplicationPlan'){
+        stage('ENVPlan'){
             steps {
-                dir('applications/'){
+                dir('env'){
                     script {
                         try {
                            sh "terraform workspace new ${params.WORKSPACE}"
                         } catch (err) {
                             sh "terraform workspace select ${params.WORKSPACE}"
                         }
-                        sh "terraform plan -out terraform-applications.tfplan;echo \$? > status"
-                        stash name: "terraform-applications-plan", includes: "terraform-applications.tfplan"
+                        sh "terraform plan -out terraform-networking.tfplan;echo \$? > status"
+                        stash name: "terraform-networking-plan", includes: "terraform-networking.tfplan"
                     }
                 }
             }
         }
-        stage('ApplicationApply'){
+        stage('ENVApply'){
             steps {
                 script{
                     def apply = false
@@ -57,15 +57,15 @@ pipeline {
                         apply = true
                     } catch (err) {
                         apply = false
-                        dir('applications/'){
+                        dir('env'){
                             sh "terraform destroy -auto-approve"
                         }
                         currentBuild.result = 'UNSTABLE'
                     }
                     if(apply){
-                        dir('applications/'){
-                            unstash "terraform-applications-plan"
-                            sh 'terraform apply terraform-applications.tfplan'
+                        dir('env'){
+                            unstash "terraform-networking-plan"
+                            sh 'terraform apply terraform-networking.tfplan'
                         }
                     }
                 }
